@@ -9,8 +9,8 @@ permissions: write-all
 
 jobs:
   deploy-subversions:
-    uses: Odoo-Ninjas/git-workflows/.github/workflows/deploy_to_subversions.yml@v4
+    uses: zebroo-tools/git-workflows/.github/workflows/deploy_to_subversions.yml@v4
     secrets: inherit
     with:
-      repo_url: git@github.com:Odoo-Ninjas/zebroo-sync.git
+      repo_url: git@github.com:zebroo-tools/zebroo-sync.git
       branches: "15.0:main 16.0:main 17.0:main"
