@@ -8,6 +8,7 @@ import os
 import time
 import uuid
 import xmlrpc.client
+from urllib.parse import urlsplit
 from robot.utils.dotdict import DotDict
 from robot.libraries.BuiltIn import BuiltIn
 import inspect
@@ -101,15 +102,29 @@ class Encoder(json.JSONEncoder):
         return super().default(obj)
 
 
+def rpc_root(server):
+    """Return scheme://host[:port] of server, dropping any URL path.
+
+    Odoo may serve its web routes under a path prefix (e.g. "/cicd"), but
+    /xmlrpc/2/* stays at the server root - same reasoning as in
+    odoo.get_conn. Values without a scheme are returned unchanged.
+    """
+    parts = urlsplit(server)
+    if not parts.scheme or not parts.netloc:
+        return server
+    return f"{parts.scheme}://{parts.netloc}"
+
+
 class tools(object):
     def _odoo(self, server, db, username, password):
         """
         I'm sitting here xmlrpc.client.
         :return: None
         """
-        common = xmlrpc.client.ServerProxy(f"{server}/xmlrpc/2/common")
+        root = rpc_root(server)
+        common = xmlrpc.client.ServerProxy(f"{root}/xmlrpc/2/common")
         uid = common.authenticate(db, username, password, {})
-        odoo = xmlrpc.client.ServerProxy(f"{server}/xmlrpc/2/object")
+        odoo = xmlrpc.client.ServerProxy(f"{root}/xmlrpc/2/object")
         return odoo, uid
 
     def execute_sql(self, server, db, user, password, sql, context=None):
